@@ -1,0 +1,49 @@
+{
+  "run_id": "20260428_131355",
+  "created_at": "2026-04-28T13:20:24",
+  "fixture": "eval_fixtures/fixed_mbti_scripts.json",
+  "overall_avg_score": 7.0,
+  "overall_human_likeness_score": 7.52,
+  "results": [
+    {
+      "mbti": "INTP",
+      "turns": 10,
+      "avg_score": 7.08,
+      "avg_human_likeness_score": 7.55,
+      "min_score": 5.96,
+      "max_score": 7.54
+    },
+    {
+      "mbti": "ESTP",
+      "turns": 10,
+      "avg_score": 6.52,
+      "avg_human_likeness_score": 7.28,
+      "min_score": 6.06,
+      "max_score": 7.54
+    },
+    {
+      "mbti": "ISFJ",
+      "turns": 10,
+      "avg_score": 7.18,
+      "avg_human_likeness_score": 7.58,
+      "min_score": 7.03,
+      "max_score": 7.54
+    },
+    {
+      "mbti": "ISFP",
+      "turns": 10,
+      "avg_score": 7.11,
+      "avg_human_likeness_score": 7.57,
+      "min_score": 6.21,
+      "max_score": 7.54
+    },
+    {
+      "mbti": "INFJ",
+      "turns": 10,
+      "avg_score": 7.12,
+      "avg_human_likeness_score": 7.6,
+      "min_score": 6.71,
+      "max_score": 7.54
+    }
+  ]
+}

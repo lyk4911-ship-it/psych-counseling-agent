@@ -1,0 +1,24 @@
+import os, requests
+from dotenv import load_dotenv
+load_dotenv()
+
+api_key  = os.getenv("OPENAI_API_KEY")
+base_url = os.getenv("OPENAI_BASE_URL")
+model    = os.getenv("OPENAI_MODEL")
+
+print("BASE_URL =", base_url, "\nMODEL =", model)
+
+r = requests.post(
+    f"{base_url.rstrip('/')}/chat/completions",
+    headers={"Authorization": f"Bearer {api_key}", "Content-Type":"application/json"},
+    json={
+        "model": model,
+        "messages": [
+            {"role": "system", "content": "你是简洁助手"},
+            {"role": "user", "content": "用一句话回复：连通性测试成功"}
+        ]
+    },
+    timeout=30
+)
+print("status:", r.status_code)
+print("resp:", r.text[:400])

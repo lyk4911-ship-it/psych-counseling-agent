@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>心理助手前端 Demo</title>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+    .chat-container { max-width: 800px; margin: 40px auto; background: #fff; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+    .messages { max-height: 480px; overflow-y: auto; padding: 8px 0; }
+    .msg { margin: 8px 0; display: flex; }
+    .msg.user { justify-content: flex-end; }
+    .msg.assistant { justify-content: flex-start; }
+    .bubble { padding: 8px 12px; border-radius: 14px; max-width: 70%; line-height: 1.5; white-space: pre-wrap; }
+    .msg.user .bubble { background: #4f46e5; color: #fff; border-bottom-right-radius: 2px; }
+    .msg.assistant .bubble { background: #f3f4f6; color: #111827; border-bottom-left-radius: 2px; }
+    .input-row { display: flex; gap: 8px; margin-top: 12px; }
+    .input-row input { flex: 1; padding: 8px 10px; border-radius: 999px; border: 1px solid #d1d5db; outline: none; }
+    .input-row button { padding: 8px 16px; border-radius: 999px; border: none; background: #4f46e5; color: #fff; cursor: pointer; }
+    .input-row button:disabled { opacity: 0.4; cursor: default; }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <div class="input-row">
+      <input id="input" placeholder="说点什么，比如：我最近总是睡不着..." />
+      <button id="send">发送</button>
+    </div>
+    <p id="backendHint" style="font-size:11px;color:#9ca3af;margin-top:10px;text-align:center;"></p>
+  </div>
+
+  <script>
+    // 后端地址：默认本机 api_server（先运行 python api_server.py）
+    // 若用 ngrok：打开页面时加参数，例如 index.html?api=https://xxxx.ngrok-free.dev/chat
+    // 或在控制台执行：localStorage.setItem('psych_backend_url','https://你的域名/chat')
+    const backendUrl = (function () {
+      const q = new URLSearchParams(location.search).get("api");
+      if (q) return q.replace(/\/$/, "");
+      const saved = localStorage.getItem("psych_backend_url");
+      if (saved) return saved.replace(/\/$/, "");
+      return "http://127.0.0.1:8000/chat";
+    })();
+    let agentState = null;
+    let sessionId = localStorage.getItem("psych_session_id") || crypto.randomUUID?.() || "s-" + Date.now();
+    localStorage.setItem("psych_session_id", sessionId);
+
+    // 像微信好友一样：页面空闲一段时间后，由前端请求一条「主动一句」（需已至少聊过一轮）
+    const params = new URLSearchParams(location.search);
+    const proactiveIdleMs = Math.max(30, parseInt(params.get("proactiveIdle") || "90", 10)) * 1000;
+    const proactiveClientCooldownMs = Math.max(60, parseInt(params.get("proactiveCooldown") || "180", 10)) * 1000;
+    let lastActivity = Date.now();
+    let lastProactiveSent = 0;
+    let proactiveInFlight = false;
+    function bumpActivity() {
+      lastActivity = Date.now();
+    }
+    ["mousedown", "keydown", "scroll", "touchstart", "input"].forEach((ev) => {
+      document.addEventListener(ev, bumpActivity, { passive: true });
+    });
+
+    document.getElementById("backendHint").textContent = "后端: " + backendUrl + " · 空闲约 " + Math.round(proactiveIdleMs / 1000) + "s 可能收到好友式一条";
+
+    const messagesEl = document.getElementById("messages");
+    const inputEl    = document.getElementById("input");
+    const sendBtn    = document.getElementById("send");
+
+    function addMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = "msg " + role;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+      div.appendChild(bubble);
+      messagesEl.appendChild(div);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const text = inputEl.value.trim();
+      if (!text) return;
+      if (text.toLowerCase().startsWith("/show")) {
+        addMessage("assistant", "该功能仅供内部使用，无法在用户端查看报告。");
+        inputEl.value = "";
+        return;
+      }
+      addMessage("user", text);
+      inputEl.value = "";
+      sendBtn.disabled = true;
+
+      try {
+        const resp = await fetch(backendUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true"
+          },
+          body: JSON.stringify({
+            text,
+            state: agentState,
+            session_id: sessionId,
+            allow_show_report: false
+          })
+        });
+
+        if (!resp.ok) {
+          throw new Error("HTTP " + resp.status);
+        }
+
+        const data = await resp.json();
+        agentState = data.state;
+        if (data.session_id) sessionId = data.session_id;
+        addMessage("assistant", data.reply || "[空回复]");
+        bumpActivity();
+      } catch (err) {
+        console.error(err);
+        addMessage("assistant", "后端好像出了一点问题，可以稍后再试一下～");
+      } finally {
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    inputEl.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function tryProactivePing() {
+      if (proactiveInFlight) return;
+      const now = Date.now();
+      if (now - lastActivity < proactiveIdleMs) return;
+      if (now - lastProactiveSent < proactiveClientCooldownMs) return;
+      if (document.visibilityState !== "visible") return;
+      proactiveInFlight = true;
+      lastProactiveSent = Date.now();
+      try {
+        const resp = await fetch(backendUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true"
+          },
+          body: JSON.stringify({
+            text: "",
+            proactive_ping: true,
+            state: agentState,
+            session_id: sessionId,
+            allow_show_report: false
+          })
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        agentState = data.state;
+        if (data.session_id) sessionId = data.session_id;
+        if (data.proactive_skipped || !(data.reply || "").trim()) return;
+        addMessage("assistant", data.reply);
+        bumpActivity();
+      } catch (e) {
+        console.warn("proactive ping", e);
+      } finally {
+        proactiveInFlight = false;
+      }
+    }
+
+    setInterval(tryProactivePing, 15000);
+
+    // 初始问候
+    addMessage("assistant", "嗨，我在呢～你最近想聊聊些什么？");
+    bumpActivity();
+  </script>
+</body>
+</html>

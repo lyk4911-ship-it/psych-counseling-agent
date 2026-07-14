@@ -1,0 +1,886 @@
+[
+  {
+    "strategy_id": "ATT-001",
+    "name": "焦点锚定点",
+    "category": "注意分配",
+    "scene": [
+      "编程/深度工作",
+      "学习/备考"
+    ],
+    "target_state": "专注提升",
+    "delivery_mode": "文字提示",
+    "duration_min": 3.0,
+    "dosage": "三点轮询×2轮",
+    "triggers": [
+      "任务切换≥3次/10min",
+      "走神自评≥4/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "错误率↓≥10%",
+    "notes": "配合计时器使用"
+  },
+  {
+    "strategy_id": "ATT-002",
+    "name": "视觉扫视重置",
+    "category": "注意分配",
+    "scene": [
+      "开会/沟通",
+      "编程/深度工作"
+    ],
+    "target_state": "注意稳定",
+    "delivery_mode": "自我引导",
+    "duration_min": 1.5,
+    "dosage": "水平扫视20次",
+    "triggers": [
+      "眼压感≥3/5",
+      "走神自评≥4/7"
+    ],
+    "contraindications": [
+      "眩晕史"
+    ],
+    "safety_level": "B",
+    "evidence_level": "B",
+    "success_criteria": "反应时↓≥8%",
+    "notes": "配合远眺20秒"
+  },
+  {
+    "strategy_id": "ATT-003",
+    "name": "一物专注法",
+    "category": "注意分配",
+    "scene": [
+      "学习/备考"
+    ],
+    "target_state": "专注提升",
+    "delivery_mode": "计时器提醒",
+    "duration_min": 10.0,
+    "dosage": "单一任务锁定×1段",
+    "triggers": [
+      "连续工作>45min",
+      "任务切换≥3次/15min"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "干扰次数≤1次",
+    "notes": "先关掉消息提醒"
+  },
+  {
+    "strategy_id": "PHY-001",
+    "name": "4-7-8呼吸",
+    "category": "生理调节",
+    "scene": [
+      "睡前"
+    ],
+    "target_state": "放松入睡",
+    "delivery_mode": "呼吸计数",
+    "duration_min": 4.0,
+    "dosage": "4-7-8×4轮",
+    "triggers": [
+      "SUDS≥6/10",
+      "入睡潜伏>20min"
+    ],
+    "contraindications": [
+      "心律不齐"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "ΔSUDS≤-2",
+    "notes": "呼吸以舒适为度"
+  },
+  {
+    "strategy_id": "PHY-002",
+    "name": "渐进性肌肉放松",
+    "category": "生理调节",
+    "scene": [
+      "突发压力后",
+      "睡前"
+    ],
+    "target_state": "身心放松",
+    "delivery_mode": "自我引导",
+    "duration_min": 8.0,
+    "dosage": "8组肌群×1轮",
+    "triggers": [
+      "SUDS≥7/10",
+      "肌肉紧张≥4/5"
+    ],
+    "contraindications": [
+      "急性损伤"
+    ],
+    "safety_level": "A",
+    "evidence_level": "A",
+    "success_criteria": "肌肉紧张评分↓≥2",
+    "notes": "配合缓慢呼气"
+  },
+  {
+    "strategy_id": "PHY-003",
+    "name": "微步行激活",
+    "category": "生理调节",
+    "scene": [
+      "久坐疲劳",
+      "编程/深度工作"
+    ],
+    "target_state": "警觉提升",
+    "delivery_mode": "步行",
+    "duration_min": 5.0,
+    "dosage": "600步",
+    "triggers": [
+      "坐姿>60min",
+      "困倦评分≥4/7"
+    ],
+    "contraindications": [
+      "腿部受伤"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "HRV↑≥5ms",
+    "notes": "走平稳路线"
+  },
+  {
+    "strategy_id": "PHY-004",
+    "name": "冷热交替敷",
+    "category": "生理调节",
+    "scene": [
+      "运动后恢复"
+    ],
+    "target_state": "酸痛缓解",
+    "delivery_mode": "冷热敷",
+    "duration_min": 6.0,
+    "dosage": "冷3min热3min×1",
+    "triggers": [
+      "肌肉酸痛≥3/5",
+      "运动后30min内"
+    ],
+    "contraindications": [
+      "皮肤过敏",
+      "循环不良"
+    ],
+    "safety_level": "B",
+    "evidence_level": "C",
+    "success_criteria": "酸痛评分↓≥2",
+    "notes": "避免破损皮肤"
+  },
+  {
+    "strategy_id": "COG-001",
+    "name": "认知重评三问",
+    "category": "认知改变",
+    "scene": [
+      "突发压力后",
+      "开会/沟通"
+    ],
+    "target_state": "情绪平稳",
+    "delivery_mode": "认知卡片",
+    "duration_min": 4.0,
+    "dosage": "三问法×1轮",
+    "triggers": [
+      "SUDS≥6/10",
+      "消极自动念≥3次"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "ΔSUDS≤-2",
+    "notes": "写下证据与替代想法"
+  },
+  {
+    "strategy_id": "COG-002",
+    "name": "如果那么计划",
+    "category": "认知改变",
+    "scene": [
+      "学习/备考",
+      "编程/深度工作"
+    ],
+    "target_state": "启动动力",
+    "delivery_mode": "文字提示",
+    "duration_min": 3.0,
+    "dosage": "IFTHEN×3条",
+    "triggers": [
+      "拖延>10min",
+      "任务开始困难评分≥4/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "启动时间↓≥30%",
+    "notes": "贴在显眼处"
+  },
+  {
+    "strategy_id": "COG-003",
+    "name": "证据清单",
+    "category": "认知改变",
+    "scene": [
+      "睡前",
+      "突发压力后"
+    ],
+    "target_state": "思维减速",
+    "delivery_mode": "纸笔",
+    "duration_min": 5.0,
+    "dosage": "证据正负各3条",
+    "triggers": [
+      "反刍≥5min",
+      "思维奔逸≥5/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "思维奔逸评分↓≥2",
+    "notes": "配合缓慢书写"
+  },
+  {
+    "strategy_id": "COG-004",
+    "name": "目标再定义",
+    "category": "认知改变",
+    "scene": [
+      "开会/沟通",
+      "编程/深度工作"
+    ],
+    "target_state": "目标清晰",
+    "delivery_mode": "自我引导",
+    "duration_min": 2.0,
+    "dosage": "SMART重述×1",
+    "triggers": [
+      "目标含糊",
+      "返工≥2次"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "任务清晰度≥7/10",
+    "notes": "与同伴确认一次"
+  },
+  {
+    "strategy_id": "RSP-001",
+    "name": "暂停标记法",
+    "category": "反应调整",
+    "scene": [
+      "开会/沟通",
+      "公共场合"
+    ],
+    "target_state": "冲动抑制",
+    "delivery_mode": "震动提醒",
+    "duration_min": 0.5,
+    "dosage": "暂停5秒×3次",
+    "triggers": [
+      "情绪上升≥5/7",
+      "对抗语气出现"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "冲突语句↓≥50%",
+    "notes": "使用掌心按压提示"
+  },
+  {
+    "strategy_id": "RSP-002",
+    "name": "延迟回复缓冲",
+    "category": "反应调整",
+    "scene": [
+      "开会/沟通"
+    ],
+    "target_state": "情绪稳态",
+    "delivery_mode": "文字提示",
+    "duration_min": 1.0,
+    "dosage": "等待60秒后回复",
+    "triggers": [
+      "被质疑后紧张≥5/7",
+      "冲动发言倾向"
+    ],
+    "contraindications": [
+      "紧急情况"
+    ],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "自我报告冲动↓≥2",
+    "notes": "必要时先记要点"
+  },
+  {
+    "strategy_id": "RSP-003",
+    "name": "STOP流程",
+    "category": "反应调整",
+    "scene": [
+      "突发压力后",
+      "公共场合"
+    ],
+    "target_state": "自我调节",
+    "delivery_mode": "自我引导",
+    "duration_min": 2.0,
+    "dosage": "STOP×1轮",
+    "triggers": [
+      "心率>100bpm",
+      "手心出汗评分≥3/5"
+    ],
+    "contraindications": [
+      "需要立即处置情境"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "心率↓≥8bpm",
+    "notes": "完成后再行动"
+  },
+  {
+    "strategy_id": "TSK-001",
+    "name": "番茄切块",
+    "category": "任务结构化",
+    "scene": [
+      "学习/备考",
+      "编程/深度工作"
+    ],
+    "target_state": "节奏稳定",
+    "delivery_mode": "番茄钟",
+    "duration_min": 25.0,
+    "dosage": "25min专注×1",
+    "triggers": [
+      "连续工作>45min",
+      "错误率>8%"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "A",
+    "success_criteria": "产出提升≥15%",
+    "notes": "间隔休息5min"
+  },
+  {
+    "strategy_id": "TSK-002",
+    "name": "两分钟法则",
+    "category": "任务结构化",
+    "scene": [
+      "学习/备考",
+      "开会/沟通"
+    ],
+    "target_state": "拖延降低",
+    "delivery_mode": "清单卡片",
+    "duration_min": 2.0,
+    "dosage": "2min内立即完成×3项",
+    "triggers": [
+      "待办>7项",
+      "拖延>10min"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "待办数↓≥30%",
+    "notes": "先处理最易项"
+  },
+  {
+    "strategy_id": "TSK-003",
+    "name": "批量处理",
+    "category": "任务结构化",
+    "scene": [
+      "编程/深度工作"
+    ],
+    "target_state": "切换减少",
+    "delivery_mode": "看板",
+    "duration_min": 15.0,
+    "dosage": "同类任务批量×1轮",
+    "triggers": [
+      "任务切换≥4次/30min",
+      "打断频率≥3次/30min"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "切换次数↓≥40%",
+    "notes": "屏蔽通知"
+  },
+  {
+    "strategy_id": "TSK-004",
+    "name": "优先级三色",
+    "category": "任务结构化",
+    "scene": [
+      "学习/备考",
+      "开会/沟通"
+    ],
+    "target_state": "目标聚焦",
+    "delivery_mode": "清单卡片",
+    "duration_min": 5.0,
+    "dosage": "高中低各3项",
+    "triggers": [
+      "目标含糊",
+      "截止期<48h"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "关键任务完成率≥80%",
+    "notes": "在日程上同步标注"
+  },
+  {
+    "strategy_id": "SOC-001",
+    "name": "同伴结对",
+    "category": "社会调节",
+    "scene": [
+      "学习/备考",
+      "编程/深度工作"
+    ],
+    "target_state": "行为坚持",
+    "delivery_mode": "同伴提醒",
+    "duration_min": 30.0,
+    "dosage": "结对专注×1段",
+    "triggers": [
+      "拖延>15min",
+      "走神自评≥4/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "专注时长↑≥20min",
+    "notes": "共享屏幕或桌面"
+  },
+  {
+    "strategy_id": "SOC-002",
+    "name": "会前对齐",
+    "category": "社会调节",
+    "scene": [
+      "开会/沟通"
+    ],
+    "target_state": "信息一致",
+    "delivery_mode": "文字提示",
+    "duration_min": 5.0,
+    "dosage": "议题要点3条",
+    "triggers": [
+      "会议目标不清晰",
+      "参与者>5人"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "会议超时↓≥30%",
+    "notes": "主持人先复述目标"
+  },
+  {
+    "strategy_id": "SOC-003",
+    "name": "群组签到",
+    "category": "社会调节",
+    "scene": [
+      "学习/备考",
+      "公共场合"
+    ],
+    "target_state": "承诺提升",
+    "delivery_mode": "群组签到",
+    "duration_min": 1.0,
+    "dosage": "打卡×1次",
+    "triggers": [
+      "计划执行率<60%",
+      "拖延>10min"
+    ],
+    "contraindications": [],
+    "safety_level": "B",
+    "evidence_level": "C",
+    "success_criteria": "执行率↑≥20pp",
+    "notes": "使用固定时段"
+  },
+  {
+    "strategy_id": "EMI-001",
+    "name": "积极照片回想",
+    "category": "情绪诱导",
+    "scene": [
+      "睡前",
+      "突发压力后"
+    ],
+    "target_state": "情绪提升",
+    "delivery_mode": "相册回看",
+    "duration_min": 3.0,
+    "dosage": "3张细品",
+    "triggers": [
+      "情绪低落≥5/7",
+      "自我批评≥3次"
+    ],
+    "contraindications": [
+      "抑郁加重迹象"
+    ],
+    "safety_level": "B",
+    "evidence_level": "C",
+    "success_criteria": "PANAS积极分↑≥4分",
+    "notes": "配合慢呼吸"
+  },
+  {
+    "strategy_id": "EMI-002",
+    "name": "快速音乐提升",
+    "category": "情绪诱导",
+    "scene": [
+      "久坐疲劳",
+      "运动后恢复"
+    ],
+    "target_state": "活力上升",
+    "delivery_mode": "音乐",
+    "duration_min": 5.0,
+    "dosage": "BPM120曲目×1",
+    "triggers": [
+      "困倦评分≥4/7",
+      "动机低≥4/7"
+    ],
+    "contraindications": [
+      "声敏感"
+    ],
+    "safety_level": "B",
+    "evidence_level": "B",
+    "success_criteria": "主观活力↑≥2分",
+    "notes": "使用耳机安全音量"
+  },
+  {
+    "strategy_id": "EMI-003",
+    "name": "感恩三件事",
+    "category": "情绪诱导",
+    "scene": [
+      "睡前"
+    ],
+    "target_state": "积极情感",
+    "delivery_mode": "纸笔",
+    "duration_min": 5.0,
+    "dosage": "列表×3件",
+    "triggers": [
+      "反刍≥5min",
+      "情绪低落≥4/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "消极情绪评分↓≥2",
+    "notes": "坚持7天形成惯性"
+  },
+  {
+    "strategy_id": "ENV-001",
+    "name": "白噪声屏蔽",
+    "category": "环境调节",
+    "scene": [
+      "编程/深度工作",
+      "学习/备考"
+    ],
+    "target_state": "干扰降低",
+    "delivery_mode": "白噪声",
+    "duration_min": 20.0,
+    "dosage": "白噪声×1段",
+    "triggers": [
+      "噪声干扰≥3/5",
+      "打断频率≥3次/30min"
+    ],
+    "contraindications": [
+      "耳鸣"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "错误率↓≥10%",
+    "notes": "与降噪耳机合用"
+  },
+  {
+    "strategy_id": "ENV-002",
+    "name": "光照激活",
+    "category": "环境调节",
+    "scene": [
+      "久坐疲劳",
+      "驾驶/通勤"
+    ],
+    "target_state": "警觉提升",
+    "delivery_mode": "光照盒",
+    "duration_min": 10.0,
+    "dosage": "2500lx×10min",
+    "triggers": [
+      "困倦评分≥4/7",
+      "清晨起床后30min内"
+    ],
+    "contraindications": [
+      "光敏感"
+    ],
+    "safety_level": "B",
+    "evidence_level": "B",
+    "success_criteria": "瞌睡评分KSS↓≥2",
+    "notes": "避免直视光源"
+  },
+  {
+    "strategy_id": "ENV-003",
+    "name": "桌面清理两件事",
+    "category": "环境调节",
+    "scene": [
+      "学习/备考",
+      "编程/深度工作"
+    ],
+    "target_state": "启动顺畅",
+    "delivery_mode": "自我引导",
+    "duration_min": 4.0,
+    "dosage": "丢弃或归位×2件",
+    "triggers": [
+      "桌面凌乱评分≥3/5",
+      "启动困难≥4/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "启动时间↓≥20%",
+    "notes": "只动可见区域"
+  },
+  {
+    "strategy_id": "META-001",
+    "name": "注意力自评打点",
+    "category": "元认知",
+    "scene": [
+      "编程/深度工作",
+      "学习/备考"
+    ],
+    "target_state": "自我监控",
+    "delivery_mode": "App引导",
+    "duration_min": 0.5,
+    "dosage": "每10min打点×1次",
+    "triggers": [
+      "走神自评≥4/7",
+      "连续工作>40min"
+    ],
+    "contraindications": [
+      "强迫倾向明显"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "自评波动幅度↓≥30%",
+    "notes": "结合简单折线回看"
+  },
+  {
+    "strategy_id": "META-002",
+    "name": "PDCA复盘",
+    "category": "元认知",
+    "scene": [
+      "学习/备考",
+      "开会/沟通"
+    ],
+    "target_state": "持续改进",
+    "delivery_mode": "纸笔",
+    "duration_min": 12.0,
+    "dosage": "PDCA×1轮",
+    "triggers": [
+      "返工≥2次",
+      "目标未达成"
+    ],
+    "contraindications": [
+      "时间极度紧迫"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "下一轮达成率↑≥20pp",
+    "notes": "限定一页内完成"
+  },
+  {
+    "strategy_id": "META-003",
+    "name": "错误日志三列",
+    "category": "元认知",
+    "scene": [
+      "编程/深度工作"
+    ],
+    "target_state": "学习优化",
+    "delivery_mode": "文字提示",
+    "duration_min": 6.0,
+    "dosage": "错误原因对策各3条",
+    "triggers": [
+      "代码报错≥3次/30min",
+      "错误率>10%"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "复发错误↓≥50%",
+    "notes": "每次提交后更新"
+  },
+  {
+    "strategy_id": "SOC-004",
+    "name": "请求澄清脚本",
+    "category": "社会调节",
+    "scene": [
+      "开会/沟通"
+    ],
+    "target_state": "误解减少",
+    "delivery_mode": "文字提示",
+    "duration_min": 1.0,
+    "dosage": "澄清句式×3条",
+    "triggers": [
+      "指令含糊",
+      "冲突苗头出现"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "误解事件↓≥50%",
+    "notes": "先复述再提问"
+  },
+  {
+    "strategy_id": "PHY-005",
+    "name": "补水与伸展",
+    "category": "生理调节",
+    "scene": [
+      "久坐疲劳",
+      "学习/备考"
+    ],
+    "target_state": "疲劳缓解",
+    "delivery_mode": "拉伸动作卡片",
+    "duration_min": 4.0,
+    "dosage": "饮水200ml加颈肩伸展",
+    "triggers": [
+      "坐姿>60min",
+      "头痛评分≥2/5"
+    ],
+    "contraindications": [
+      "肾功能受限"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "头痛评分↓≥1",
+    "notes": "配合眼保健操"
+  },
+  {
+    "strategy_id": "TSK-005",
+    "name": "起步五分钟",
+    "category": "任务结构化",
+    "scene": [
+      "学习/备考",
+      "编程/深度工作"
+    ],
+    "target_state": "进入状态",
+    "delivery_mode": "计时器提醒",
+    "duration_min": 5.0,
+    "dosage": "起步专注×1段",
+    "triggers": [
+      "拖延>10min",
+      "任务畏难≥4/7"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "起步率≥90%",
+    "notes": "只做最小可行步"
+  },
+  {
+    "strategy_id": "EMI-004",
+    "name": "微笑肌练习",
+    "category": "情绪诱导",
+    "scene": [
+      "公共场合",
+      "突发压力后"
+    ],
+    "target_state": "情绪上调",
+    "delivery_mode": "自我引导",
+    "duration_min": 1.0,
+    "dosage": "口角上提30秒×2次",
+    "triggers": [
+      "情绪低落≥4/7",
+      "社交压力≥4/7"
+    ],
+    "contraindications": [
+      "颞颌关节不适"
+    ],
+    "safety_level": "B",
+    "evidence_level": "C",
+    "success_criteria": "积极情绪评分↑≥2",
+    "notes": "配合挺胸姿势"
+  },
+  {
+    "strategy_id": "ENV-004",
+    "name": "温度微调",
+    "category": "环境调节",
+    "scene": [
+      "开会/沟通",
+      "学习/备考"
+    ],
+    "target_state": "舒适优化",
+    "delivery_mode": "自我引导",
+    "duration_min": 2.0,
+    "dosage": "上调或下调1℃",
+    "triggers": [
+      "困倦评分≥4/7",
+      "出汗评分≥3/5"
+    ],
+    "contraindications": [
+      "体温调节障碍"
+    ],
+    "safety_level": "B",
+    "evidence_level": "C",
+    "success_criteria": "困倦评分↓≥1",
+    "notes": "避免过度变化"
+  },
+  {
+    "strategy_id": "ATT-004",
+    "name": "注意计数回圈",
+    "category": "注意分配",
+    "scene": [
+      "驾驶/通勤",
+      "编程/深度工作"
+    ],
+    "target_state": "注意稳定",
+    "delivery_mode": "自我引导",
+    "duration_min": 2.0,
+    "dosage": "数呼吸到10循环×3",
+    "triggers": [
+      "困倦评分≥4/7",
+      "走神自评≥4/7"
+    ],
+    "contraindications": [
+      "驾驶中禁闭眼练习"
+    ],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "走神自评↓≥2",
+    "notes": "车况安全前提下进行"
+  },
+  {
+    "strategy_id": "RSP-004",
+    "name": "十秒规则",
+    "category": "反应调整",
+    "scene": [
+      "开会/沟通",
+      "公共场合"
+    ],
+    "target_state": "反应抑制",
+    "delivery_mode": "文字提示",
+    "duration_min": 0.2,
+    "dosage": "回应前默数10",
+    "triggers": [
+      "被挑衅感≥5/7",
+      "语速过快"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "打断率↓≥30%",
+    "notes": "与深呼气配合"
+  },
+  {
+    "strategy_id": "COG-005",
+    "name": "灾难化拆解",
+    "category": "认知改变",
+    "scene": [
+      "睡前",
+      "突发压力后"
+    ],
+    "target_state": "焦虑下降",
+    "delivery_mode": "认知卡片",
+    "duration_min": 6.0,
+    "dosage": "最坏最好最可能各1条",
+    "triggers": [
+      "SUDS≥6/10",
+      "反刍≥5min"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "B",
+    "success_criteria": "ΔSUDS≤-2",
+    "notes": "写成要点句"
+  },
+  {
+    "strategy_id": "META-004",
+    "name": "元认知注记",
+    "category": "元认知",
+    "scene": [
+      "学习/备考",
+      "编程/深度工作"
+    ],
+    "target_state": "觉察增强",
+    "delivery_mode": "文字提示",
+    "duration_min": 1.0,
+    "dosage": "当下在做什么为何×1句",
+    "triggers": [
+      "走神自评≥4/7",
+      "效率低于基线≥20%"
+    ],
+    "contraindications": [],
+    "safety_level": "A",
+    "evidence_level": "C",
+    "success_criteria": "任务回到轨道≤1min",
+    "notes": "贴在屏幕边缘"
+  }
+]
