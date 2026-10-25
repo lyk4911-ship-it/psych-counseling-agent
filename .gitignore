@@ -1,4 +1,4 @@
-﻿.env
+.env
 venv/
 __pycache__/
 *.pyc
@@ -7,3 +7,10 @@ simulation_logs/
 .vscode/
 tempCodeRunnerFile.py
 tempCodeRunnerFile.python
+data/
+.venv/
+.pytest_cache/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+node_modules/

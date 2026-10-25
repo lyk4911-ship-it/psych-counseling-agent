@@ -1,0 +1,405 @@
+:root {
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  color: #25342f;
+  background: #f4f6f2;
+  font-synthesis: none;
+  line-height: 1.6;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+textarea {
+  font: inherit;
+}
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 9px 15px;
+  background: #326755;
+  color: #fff;
+  cursor: pointer;
+}
+button:hover {
+  filter: brightness(0.96);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+input,
+textarea {
+  width: 100%;
+  border: 1px solid #cdd8cf;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+  color: inherit;
+}
+textarea {
+  resize: vertical;
+}
+input:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid #598c74;
+  outline-offset: 2px;
+}
+label {
+  display: block;
+  font-size: 14px;
+  margin: 12px 0 6px;
+}
+label input,
+label textarea {
+  display: block;
+  margin-top: 5px;
+}
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+h1 {
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+h2 {
+  font-size: 17px;
+  margin-bottom: 10px;
+}
+.muted,
+small {
+  color: #64766b;
+}
+.quiet {
+  background: #eaf0e9;
+  color: #345344;
+}
+.danger-text {
+  color: #a43d3d;
+}
+.danger {
+  background: #a43d3d;
+}
+.notice {
+  min-height: 1.5em;
+  font-size: 14px;
+  color: #a43d3d;
+  white-space: pre-wrap;
+}
+.notice.success {
+  color: #326755;
+}
+.fineprint {
+  font-size: 12px;
+  color: #718177;
+  margin: 12px 0 0;
+}
+.eyebrow {
+  font-size: 13px;
+  color: #59806a;
+  letter-spacing: 0.08em;
+}
+.auth-card {
+  max-width: 440px;
+  background: white;
+  padding: 32px;
+  margin: 9vh auto;
+  border: 1px solid #dfe7df;
+  border-radius: 18px;
+  box-shadow: 0 15px 45px #263a2810;
+}
+.auth-card button {
+  width: 100%;
+  margin: 6px 0;
+}
+.auth-card small {
+  font-size: 12px;
+}
+.app {
+  max-width: 1240px;
+  margin: auto;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  gap: 12px;
+}
+.topbar strong {
+  font-size: 23px;
+}
+.topbar nav {
+  display: flex;
+  gap: 6px;
+}
+.workspace {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  border: 1px solid #dfe7df;
+  border-radius: 16px;
+  background: white;
+  min-height: 76vh;
+  margin: 0 20px 20px;
+  overflow: hidden;
+}
+aside {
+  padding: 20px;
+  background: #edf2eb;
+  border-right: 1px solid #dfe7df;
+}
+.aside-header {
+  margin-bottom: 18px;
+}
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.conversation-item {
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  color: #324c3a;
+  overflow: hidden;
+}
+.conversation-item.active {
+  background: #dbe8db;
+}
+.conversation-item strong,
+.conversation-item small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conversation-item small {
+  font-size: 11px;
+}
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #edf0eb;
+  padding: 16px 20px;
+}
+.chat-header h2 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.chat-header button {
+  font-size: 12px;
+  padding: 6px 9px;
+}
+main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding-bottom: 16px;
+}
+.messages {
+  height: 53vh;
+  min-height: 250px;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.message {
+  display: flex;
+  flex-direction: column;
+  max-width: 84%;
+  align-self: flex-start;
+}
+.message.user {
+  align-self: flex-end;
+}
+.bubble {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: #f0f3ed;
+}
+.user .bubble {
+  background: #326755;
+  color: #fff;
+}
+.message time {
+  font-size: 10px;
+  color: #829086;
+  margin-top: 4px;
+}
+.empty {
+  color: #78887c;
+  text-align: center;
+  margin: auto;
+  padding: 25px;
+}
+.composer {
+  display: flex;
+  gap: 10px;
+  margin: 0 20px;
+  align-items: flex-end;
+}
+.composer textarea {
+  max-height: 160px;
+  min-height: 65px;
+}
+.composer button {
+  min-height: 48px;
+}
+main > .notice,
+main > .fineprint {
+  margin-left: 20px;
+  margin-right: 20px;
+}
+.service-notice {
+  font-size: 12px;
+  background: #fff8df;
+  color: #7d6326;
+  padding: 8px 20px;
+  margin: 0;
+}
+dialog {
+  border: 1px solid #d2ddcf;
+  border-radius: 16px;
+  padding: 24px;
+  width: min(540px, 94vw);
+  max-height: 88vh;
+  color: inherit;
+}
+dialog::backdrop {
+  background: #1d302d70;
+}
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+.dialog-header h2 {
+  margin: 0;
+}
+dialog form {
+  margin: 15px 0;
+}
+.memory-item {
+  border-top: 1px solid #e1e7de;
+  padding: 14px 0;
+}
+.memory-item .actions {
+  margin-top: 7px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+hr {
+  border: 0;
+  border-top: 1px solid #e1e7de;
+  margin: 20px 0;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+[hidden] {
+  display: none !important;
+}
+.composer button {
+  min-width: 76px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.topbar nav button {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#userLabel {
+  overflow-wrap: anywhere;
+}
+.chat-header > div {
+  flex-shrink: 0;
+}
+@media (max-width: 700px) {
+  .auth-card {
+    margin: 5vh 16px;
+    padding: 24px;
+  }
+  .topbar {
+    padding: 14px;
+  }
+  .subtitle {
+    display: none;
+  }
+  .topbar nav button {
+    font-size: 12px;
+    padding: 8px;
+    max-width: 105px;
+  }
+  .workspace {
+    grid-template-columns: 1fr;
+    margin: 0 8px 12px;
+  }
+  aside {
+    border-right: 0;
+    border-bottom: 1px solid #dfe7df;
+    padding: 12px;
+  }
+  .aside-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 8px;
+  }
+  .aside-header h2 {
+    margin: 0;
+  }
+  .conversation-list {
+    flex-direction: row;
+    max-height: 100px;
+    overflow-x: auto;
+  }
+  .conversation-item {
+    min-width: 145px;
+    max-width: 180px;
+  }
+  #userLabel {
+    display: none;
+  }
+  .messages {
+    height: 47vh;
+    padding: 16px;
+  }
+  .chat-header {
+    padding: 12px;
+  }
+  .message {
+    max-width: 92%;
+  }
+  .composer {
+    margin: 0 12px;
+  }
+}

@@ -1,240 +1,184 @@
-# api_server.py —— 把 dialog_agent 封成一个 HTTP 接口（干净版）
 # -*- coding: utf-8 -*-
+"""Account-owned persistent chat API and separate administrator tools."""
 
-import os
-import uvicorn
-import traceback
 import asyncio
+import hashlib
 import json
-import uuid
-from datetime import datetime
-from collections import OrderedDict
-
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, HTMLResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
-import secrets
 import logging
+import os
+from pathlib import Path
+import secrets
+import uuid
+from typing import Any, Dict, List, Optional
 
-from dialog_agent import DialogAgent, log_turn, PROACTIVE_MARKER
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
+from pydantic import BaseModel, Field
+
+from account_api import User, get_store, router as account_router
+from account_store import AccountStore, StoreError
+from dialog_agent import DialogAgent, ModelServiceError, PROACTIVE_MARKER, API_KEY
 from show_memory import append_show_report, read_all_entries
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# 若设置，则仅当请求中 tester_token 与本值一致时，才允许 allow_show_report（生产环境建议必设）
 TESTER_TOKEN = (os.getenv("TESTER_TOKEN") or "").strip()
-
-# 管理员后台 HTTP Basic Auth（必须在 .env 中设置，否则拒绝访问）
 ADMIN_USER = (os.getenv("ADMIN_USER") or "").strip()
 ADMIN_PASS = (os.getenv("ADMIN_PASS") or "").strip()
-
 _security = HTTPBasic()
+
 
 def _require_admin(credentials: HTTPBasicCredentials = Depends(_security)):
     if not ADMIN_USER or not ADMIN_PASS:
-        raise HTTPException(status_code=503, detail="管理员账号未配置，请在 .env 设置 ADMIN_USER / ADMIN_PASS")
-    ok = (
-        secrets.compare_digest(credentials.username.encode(), ADMIN_USER.encode())
-        and secrets.compare_digest(credentials.password.encode(), ADMIN_PASS.encode())
-    )
-    if not ok:
-        raise HTTPException(
-            status_code=401,
-            detail="认证失败",
-            headers={"WWW-Authenticate": "Basic"},
-        )
+        raise HTTPException(503, "管理员账号未配置，请设置 ADMIN_USER / ADMIN_PASS")
+    valid_user = secrets.compare_digest(credentials.username.encode(), ADMIN_USER.encode())
+    valid_password = secrets.compare_digest(credentials.password.encode(), ADMIN_PASS.encode())
+    if not (valid_user and valid_password):
+        raise HTTPException(401, "认证失败", headers={"WWW-Authenticate": "Basic"})
+
 
 class ChatRequest(BaseModel):
-    text: str = ""
+    text: str = Field(default="", max_length=4000)
+    conversation_id: Optional[str] = Field(default=None, max_length=64)
+    session_id: Optional[str] = Field(default=None, max_length=64)
+    request_id: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    # Legacy tester fields are accepted, but public /chat never trusts them.
     state: Optional[Dict[str, Any]] = None
-    session_id: Optional[str] = None  # 会话ID，前端生成并持久化，用于管理员追踪
-    allow_show_report: bool = False  # 仅测试者后台应传 True；用户端须为 False
-    tester_token: Optional[str] = None  # 与 .env 中 TESTER_TOKEN 一致时才允许生成 /show 报告
-    # 长期记忆库：仅在与 /show 报告一并写入；填「用户3」或昵称等，便于检索
-    memory_user_label: Optional[str] = None
-    # 为 True 时表示「页面空闲触发的主动一句」，服务端映射为内部标记，不当作用户正文
+    allow_show_report: bool = False
+    tester_token: Optional[str] = Field(default=None, max_length=256)
+    memory_user_label: Optional[str] = Field(default=None, max_length=60)
     proactive_ping: bool = False
 
-
-def _effective_allow_show(req: ChatRequest) -> bool:
-    if not req.allow_show_report:
-        return False
-    if not TESTER_TOKEN:
-        return True
-    return (req.tester_token or "").strip() == TESTER_TOKEN
 
 class ChatResponse(BaseModel):
     reply: str
     state: Dict[str, Any]
-    session_id: str  # 返回会话ID（若请求未带则返回新生成的）
-    proactive_skipped: bool = False  # 主动一句因冷却等原因未生成时为 True
+    session_id: str
+    conversation_id: str
+    proactive_skipped: bool = False
 
-# 会话存储：供管理员实时观察（最多保留100个会话，LRU淘汰）
-SESSION_STORE: OrderedDict = OrderedDict()
-SESSION_STORE_MAX = 100
 
-# SSE 订阅者队列：用于实时推送会话更新
-_admin_subscribers: List[asyncio.Queue] = []
+app = FastAPI(title="Psych Companion API", version="0.2.0")
+app.state.store = AccountStore()
+app.state.agent = DialogAgent()
+app.include_router(account_router)
+_ROOT = Path(__file__).resolve().parent
+app.mount("/assets", StaticFiles(directory=_ROOT / "web"), name="assets")
 
-def _broadcast_session_update(update: dict):
-    """向所有已连接的管理员推送会话更新"""
-    for q in _admin_subscribers:
+# Serve the browser UI from this server. Explicit CORS origins are optional for
+# other clients; credentialed wildcard origins are intentionally unsupported.
+_cors_origins = [value.strip().rstrip("/") for value in os.getenv("CORS_ORIGINS", "").split(",") if value.strip() and value.strip() != "*"]
+if _cors_origins:
+    app.add_middleware(CORSMiddleware, allow_origins=_cors_origins, allow_credentials=True,
+                       allow_methods=["GET", "POST", "PATCH", "DELETE"],
+                       allow_headers=["Content-Type", "X-CSRF-Token"])
+
+
+@app.middleware("http")
+async def browser_security(request: Request, call_next):
+    if request.method not in ("GET", "HEAD", "OPTIONS"):
+        origin = request.headers.get("origin")
+        expected = str(request.base_url).rstrip("/")
+        if origin and origin.rstrip("/") not in [expected, *_cors_origins]:
+            return JSONResponse({"detail": "不允许来自其他站点的请求"}, status_code=403)
         try:
-            q.put_nowait(update)
-        except asyncio.QueueFull:
-            pass
+            if int(request.headers.get("content-length", "0")) > 512_000:
+                return JSONResponse({"detail": "请求内容过大"}, status_code=413)
+        except ValueError:
+            return JSONResponse({"detail": "无效的请求长度"}, status_code=400)
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "same-origin"
+    return response
 
-def _update_session_store(session_id: str, user_text: str, new_state: dict, reply: str):
-    """更新会话存储并广播"""
-    s = new_state or {}
-    summary = {
-        "session_id": session_id,
-        "last_user_msg": (user_text or "")[:80],
-        "last_reply": (reply or "")[:80],
-        "turns": s.get("turns", 0),
-        "goal": s.get("goal"),
-        "problem_category": s.get("problem_category"),
-        "severity_score": s.get("severity_score"),
-        "risk_flags": s.get("risk_flags"),
-        "state_keywords": (s.get("state_keywords") or [])[:5],
-        "current_strategy": s.get("current_strategy"),
-        "phase": s.get("phase"),
-        "updated_at": datetime.now().isoformat(),
-        "state": s,  # 完整状态供管理员查看
-    }
-    SESSION_STORE[session_id] = summary
-    SESSION_STORE.move_to_end(session_id)
-    if len(SESSION_STORE) > SESSION_STORE_MAX:
-        SESSION_STORE.popitem(last=False)
-    _broadcast_session_update(summary)
 
-app = FastAPI(title="Psych Agent API", version="0.1.0")
+@app.exception_handler(StoreError)
+async def store_error(request: Request, exc: StoreError):
+    return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
-# CORS：先全开放，后面可以收紧到你的前端域名
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
-agent = DialogAgent()
+@app.exception_handler(ModelServiceError)
+async def model_error(request: Request, exc: ModelServiceError):
+    return JSONResponse({"detail": str(exc)}, status_code=exc.status_code)
 
-_FRONTEND_HTML_PATH = os.path.join(os.path.dirname(__file__), "index.html")
 
 @app.get("/", response_class=HTMLResponse)
 def root():
-    """直接提供前端页面，用户访问根路径即可使用"""
-    try:
-        with open(_FRONTEND_HTML_PATH, "r", encoding="utf-8") as f:
-            html = f.read()
-        # 将前端 API 地址替换为相对路径，避免用户手动配置
-        html = html.replace(
-            'return "http://127.0.0.1:8000/chat";',
-            'return location.origin + "/chat";'
-        )
-        return html
-    except FileNotFoundError:
-        return HTMLResponse('<p>index.html 未找到，请确认文件存在于服务根目录。</p>', status_code=500)
+    return HTMLResponse((_ROOT / "index.html").read_text(encoding="utf-8"))
+
 
 @app.get("/health")
-def health():
-    return {"status": "healthy"}
+def health(store=Depends(get_store)):
+    with store.connection() as db:
+        db.execute("SELECT 1")
+    return {"status": "healthy", "model_configured": bool(API_KEY)}
+
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(req: ChatRequest):
-    """
-    处理用户对话请求
-    - 添加异常处理和错误日志
-    - 自动记录对话日志
-    - 更新会话存储供管理员观察
-    """
+def chat(req: ChatRequest, user: User, request: Request, store=Depends(get_store)):
+    if req.conversation_id and req.session_id and req.conversation_id != req.session_id:
+        raise HTTPException(422, "对话编号不一致")
+    conversation_id = req.conversation_id or req.session_id
+    if not conversation_id:
+        conversation_id = store.create_conversation(user["id"])["id"]
+    user_text = PROACTIVE_MARKER if req.proactive_ping or req.text.strip() == PROACTIVE_MARKER else req.text.strip()
+    request_id = req.request_id or str(uuid.uuid4())
+    payload_hash = hashlib.sha256(json.dumps({"text": user_text}, ensure_ascii=False).encode()).hexdigest()
+    state, lease, previous = store.claim_turn(user["id"], conversation_id, request_id, payload_hash)
+    if previous is not None:
+        return previous
     try:
-        if req.proactive_ping or (req.text or "").strip() == PROACTIVE_MARKER:
-            user_text = PROACTIVE_MARKER
-        else:
-            user_text = req.text or ""
-        user_state = req.state or None
-        session_id = req.session_id or str(uuid.uuid4())
-        allow_show = _effective_allow_show(req)
-        if req.allow_show_report and not allow_show:
-            logger.warning("拒绝无效的 allow_show_report（tester_token 不匹配或未提供）")
+        # Hidden state comes only from this user's database, never req.state.
+        memory_context = store.memory_context(user["id"], conversation_id, user_text)
+        reply, new_state = request.app.state.agent.run(user_text, state or None,
+                                                      allow_show_report=False,
+                                                      memory_context=memory_context)
+        response = ChatResponse(reply=reply or "", state=new_state, session_id=conversation_id,
+                                conversation_id=conversation_id,
+                                proactive_skipped=not bool((reply or "").strip()) and user_text == PROACTIVE_MARKER)
+        store.finish_turn(user["id"], conversation_id, lease, request_id, payload_hash, user_text,
+                          response.model_dump(), proactive=user_text == PROACTIVE_MARKER)
+        return response
+    finally:
+        store.release_turn(conversation_id, lease)
 
-        # 调用对话引擎（用户端不传 allow_show_report，无法使用 /show）
-        reply, new_state = agent.run(
-            user_text,
-            user_state,
-            allow_show_report=allow_show,
-        )
-        
-        # 记录对话日志
-        try:
-            log_turn(user_text, new_state, reply)
-        except Exception as log_err:
-            logger.warning(f"日志记录失败: {log_err}", exc_info=True)
-        
-        # 更新会话存储并推送给管理员
-        try:
-            _update_session_store(session_id, user_text, new_state, reply)
-        except Exception as store_err:
-            logger.warning(f"会话存储失败: {store_err}", exc_info=True)
 
-        # 长期记忆库：仅持久化 /show 报告全文（不存普通聊天）
-        if (
-            allow_show
-            and (user_text or "").strip().lower().startswith("/show")
-            and "该指令为内部测试功能" not in (reply or "")
-        ):
-            try:
-                append_show_report(
-                    (req.memory_user_label or "").strip(),
-                    session_id,
-                    reply or "",
-                )
-            except Exception as mem_err:
-                logger.warning(f"长期记忆写入失败: {mem_err}", exc_info=True)
+# Administrator tests remain stateless and explicitly separated from user data.
+@app.post("/admin/chat", response_model=ChatResponse)
+def admin_chat(req: ChatRequest, request: Request, _=Depends(_require_admin)):
+    allow_show = req.allow_show_report and (not TESTER_TOKEN or secrets.compare_digest((req.tester_token or "").encode(), TESTER_TOKEN.encode()))
+    session_id = req.session_id or str(uuid.uuid4())
+    reply, state = request.app.state.agent.run(req.text, req.state, allow_show_report=allow_show)
+    if allow_show and req.text.strip().lower().startswith("/show"):
+        append_show_report(req.memory_user_label or "", session_id, reply)
+    return ChatResponse(reply=reply or "", state=state, session_id=session_id, conversation_id=session_id)
 
-        proactive_skipped = (not (reply or "").strip()) and user_text == PROACTIVE_MARKER
-        return ChatResponse(
-            reply=reply or "",
-            state=new_state,
-            session_id=session_id,
-            proactive_skipped=proactive_skipped,
-        )
-        
-    except ValueError as e:
-        # 配置错误等业务异常
-        logger.error(f"业务错误: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail=f"请求参数错误: {str(e)}")
-        
-    except Exception as e:
-        # 未知异常，记录详细错误信息
-        error_detail = traceback.format_exc()
-        logger.error(f"处理请求时发生异常: {e}\n{error_detail}", exc_info=True)
-        
-        # 返回友好的错误信息，不暴露内部细节
-        raise HTTPException(
-            status_code=500,
-            detail="服务暂时不可用，请稍后重试。如问题持续，请联系管理员。"
-        )
+
+@app.get("/admin/users")
+def admin_users(_=Depends(_require_admin), store=Depends(get_store)):
+    return {"users": store.admin_users()}
+
+
+@app.get("/admin/users/{user_id}/export")
+def admin_user_export(user_id: str, _=Depends(_require_admin), store=Depends(get_store)):
+    return store.export(user_id)
+
 
 # ======================================================
 # =============== 管理员实时观察界面 ====================
 # ======================================================
 
 @app.get("/admin/sessions")
-def admin_list_sessions(_=Depends(_require_admin)):
+def admin_list_sessions(_=Depends(_require_admin), store=Depends(get_store)):
     """获取所有会话摘要（供管理员轮询或首次加载）"""
-    return {"sessions": list(SESSION_STORE.values())}
+    return {"sessions": store.admin_sessions()}
 
 
 @app.get("/admin/memory")
@@ -249,21 +193,19 @@ def admin_memory_page(_=Depends(_require_admin)):
     return _MEMORY_HTML
 
 @app.get("/admin/stream")
-async def admin_stream(_=Depends(_require_admin)):
-    """SSE 实时推送：每当有会话更新时推送给管理员"""
+async def admin_stream(request: Request, _=Depends(_require_admin), store=Depends(get_store)):
+    """Poll persistent state so restarts and multiple workers stay consistent."""
     async def event_stream():
-        queue = asyncio.Queue()
-        _admin_subscribers.append(queue)
-        try:
-            while True:
-                try:
-                    update = await asyncio.wait_for(queue.get(), timeout=30.0)
-                    yield f"data: {json.dumps(update, ensure_ascii=False)}\n\n"
-                except asyncio.TimeoutError:
-                    yield ": keepalive\n\n"
-        finally:
-            if queue in _admin_subscribers:
-                _admin_subscribers.remove(queue)
+        previous = None
+        while not await request.is_disconnected():
+            rows = await run_in_threadpool(store.admin_sessions)
+            signature = hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
+            if signature != previous:
+                yield 'data: {"changed":true}\n\n'
+                previous = signature
+            else:
+                yield ": keepalive\n\n"
+            await asyncio.sleep(5)
 
     return StreamingResponse(
         event_stream(),
@@ -315,17 +257,26 @@ _ADMIN_HTML = """
   <h1>用户状态实时观察 <span id="status" class="status off">连接中</span></h1>
   <p style="font-size:13px;margin:0 0 12px"><a href="/admin/memory-page" style="color:#60a5fa">长期记忆库（/show）</a> · <a href="/tester" style="color:#60a5fa">测试者后台</a></p>
   <div id="sessions" class="sessions"></div>
+  <h2 style="font-size:1rem;margin-top:24px">注册账户</h2>
+  <div id="users" class="sessions"></div>
 
   <script>
     const sessionsEl = document.getElementById("sessions");
     const statusEl = document.getElementById("status");
 
-    function renderSession(s) {
-      const risk = (s.risk_flags || "green").toLowerCase();
+    function escapeHtml(value) {
+      const element = document.createElement("span");
+      element.textContent = String(value == null ? "" : value);
+      return element.innerHTML;
+    }
+
+    function renderSession(raw) {
+      const s = Object.fromEntries(Object.entries(raw).map(([key, value]) => [key, escapeHtml(typeof value === "object" ? JSON.stringify(value) : value)]));
+      const risk = ["green", "yellow", "red"].includes(raw.risk_flags) ? raw.risk_flags : "green";
       return `
         <div class="card">
           <div class="card-header">
-            <span class="card-id">${(s.session_id || "").slice(0, 8)}...</span>
+            <span class="card-id">${s.display_name} · ${s.username} · ${s.title} · ${(s.session_id || "").slice(0, 8)}...</span>
             <span class="card-time">${(s.updated_at || "").replace("T", " ").slice(0, 19)}</span>
           </div>
           <div class="meta">
@@ -334,10 +285,10 @@ _ADMIN_HTML = """
             ${s.goal ? `<span>目标: ${s.goal}</span>` : ""}
             ${s.problem_category ? `<span>类别: ${s.problem_category}</span>` : ""}
             ${s.severity_score != null ? `<span>程度: ${s.severity_score}</span>` : ""}
-            ${(s.state_keywords || []).length ? `<span>关键词: ${s.state_keywords.join(", ")}</span>` : ""}
+            ${(raw.state_keywords || []).length ? `<span>关键词: ${escapeHtml(raw.state_keywords.join(", "))}</span>` : ""}
           </div>
           ${s.last_user_msg ? `<div class="msg">用户: ${s.last_user_msg}</div>` : ""}
-          ${s.current_strategy ? `<div class="msg">当前策略: ${s.current_strategy.strategy_id || JSON.stringify(s.current_strategy)}</div>` : ""}
+          ${raw.current_strategy ? `<div class="msg">当前策略: ${escapeHtml(raw.current_strategy.strategy_id || JSON.stringify(raw.current_strategy))}</div>` : ""}
         </div>
       `;
     }
@@ -355,6 +306,21 @@ _ADMIN_HTML = """
         const r = await fetch("/admin/sessions");
         const d = await r.json();
         render(d.sessions || []);
+        const usersResponse = await fetch("/admin/users");
+        const usersData = await usersResponse.json();
+        const usersEl = document.getElementById("users");
+        usersEl.replaceChildren();
+        for (const user of usersData.users || []) {
+          const card = document.createElement("div");
+          card.className = "card";
+          const label = document.createElement("p");
+          label.textContent = `${user.display_name} · ${user.username} · ${user.conversation_count} 段对话`;
+          const exportLink = document.createElement("a");
+          exportLink.href = `/admin/users/${encodeURIComponent(user.id)}/export`;
+          exportLink.textContent = "查看 / 导出账户记录";
+          card.append(label, exportLink);
+          usersEl.appendChild(card);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -523,7 +489,7 @@ _TESTER_HTML = """
         memory_user_label: memoryLabelEl.value.trim() || null
       };
       try {
-        const resp = await fetch(base + "/chat", {
+        const resp = await fetch(base + "/admin/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body)
